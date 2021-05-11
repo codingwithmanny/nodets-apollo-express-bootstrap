@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+      window.addEventListener('load', () => {
+        const button = document.querySelector('button');
+        const pre = document.querySelector('pre');
+
+        button.addEventListener('click', () => {
+          axios({
+            url: `${window.location.origin}/graphql`,
+            method: 'POST',
+            data: {
+              query: `query Users {
+                users {
+                  id
+                  first_name
+                  last_name
+                  email
+                }
+              }`,
+            },
+          })
+            .then(({ data: response }) => {
+              pre.innerHTML = JSON.stringify(response?.data?.users, null, ' ');
+            })
+            .catch((errors) => {
+              console.log({ errors });
+            });
+        });
+      });
+    </script>
+    <title>NodeTS Apollo Express Bootstrap</title>
+  </head>
+  <body>
+    <h1>NodeTS Apollo Express Bootstrap</h1>
+    <button>Get Users</button>
+    <hr />
+    <code><pre></pre></code>
+  </body>
+</html>

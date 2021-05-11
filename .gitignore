@@ -1,0 +1,8 @@
+node_modules/
+build
+dist
+*.log
+.env
+package-lock.json
+.eslintcache
+**/.DS_Store
