@@ -45,7 +45,7 @@ export const typeDefsMutation = `
  *
  */
 export default {
-  types: typeDefsTypes,
-  queries: typeDefsQuery,
-  mutations: typeDefsMutation,
+  types: [typeDefsTypes].join('\n'),
+  queries: [typeDefsQuery].join('\n'),
+  mutations: [typeDefsMutation].join('\n'),
 };

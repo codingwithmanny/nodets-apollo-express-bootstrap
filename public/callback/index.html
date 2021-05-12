@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.auth0.com/js/auth0/9.11/auth0.min.js"></script>
+    <script>
+      window.addEventListener('load', () => {
+        const preCode = document.getElementById('code');
+        const preData = document.getElementById('data');
+        const accessToken = window.location.hash.slice(14);
+        localStorage.setItem('accessToken', accessToken);
+
+        preCode.innerHTML = JSON.stringify(accessToken, null, ' ');
+
+        if (accessToken) {
+          axios({
+            url: `${AUTH0_DOMAIN}/userinfo`,
+            method: 'GET',
+            headers: {
+              Accept: 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            withCredentials: true,
+          })
+            .then(({ data: response }) => {
+              preData.innerHTML = JSON.stringify(response?.data, null, ' ');
+            })
+            .catch((errors) => {
+              console.log({ errors });
+            });
+        }
+      });
+    </script>
+    <title>NodeTS Apollo Express Bootstrap - Callback</title>
+  </head>
+  <body>
+    <h1>Callback</h1>
+    <code><pre id="code"></pre></code>
+    <p>Validation</p>
+    <code><pre id="data"></pre></code>
+    <!-- <button>Back</button> -->
+  </body>
+</html>
