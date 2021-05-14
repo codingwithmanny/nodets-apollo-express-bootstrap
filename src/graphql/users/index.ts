@@ -22,7 +22,6 @@ const QueryListUsers = async (
   { filters }: TArgs,
   _context: BaseContext,
 ): Promise<User[]> => {
-  console.log('QueryListUsers');
   return await USER_QUERY(filters);
 };
 

@@ -3,23 +3,30 @@
 import { gql } from 'apollo-server-express';
 import userTypeDefs from './users/typeDefs';
 import bookTypeDefs from './books/typeDefs';
+import authTypeDefs from './auth/typeDefs';
 
 // GraphQL
 // ========================================================
 /**
  *
  */
-const graphqlTypes = [userTypeDefs.types, bookTypeDefs.types].join('\n');
+const graphqlTypes = [userTypeDefs.types, bookTypeDefs.types, authTypeDefs.types].join('\n');
 
 /**
  *
  */
-const graphqlQueries = [userTypeDefs.queries, bookTypeDefs.queries].join('\n');
+const graphqlQueries = [userTypeDefs.queries, bookTypeDefs.queries, authTypeDefs.queries].join(
+  '\n',
+);
 
 /**
  *
  */
-const graphqlMutations = [userTypeDefs.mutations, bookTypeDefs.mutations].join('\n');
+const graphqlMutations = [
+  userTypeDefs.mutations,
+  bookTypeDefs.mutations,
+  authTypeDefs.mutations,
+].join('\n');
 
 // Type Definitions
 // ========================================================

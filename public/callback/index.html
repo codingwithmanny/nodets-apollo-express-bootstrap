@@ -4,32 +4,45 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/env.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.auth0.com/js/auth0/9.11/auth0.min.js"></script>
     <script>
       window.addEventListener('load', () => {
         const preCode = document.getElementById('code');
         const preData = document.getElementById('data');
-        const accessToken = window.location.hash.slice(14);
+        const search = new URLSearchParams(window.location.hash.slice(1));
+        const accessToken = search.get('access_token');
         localStorage.setItem('accessToken', accessToken);
 
         preCode.innerHTML = JSON.stringify(accessToken, null, ' ');
 
         if (accessToken) {
           axios({
-            url: `${AUTH0_DOMAIN}/userinfo`,
-            method: 'GET',
+            url: `${window.location.origin}/graphql`,
+            method: 'POST',
             headers: {
               Accept: 'application/json',
               Authorization: `Bearer ${accessToken}`,
             },
             withCredentials: true,
+            data: {
+              query: `query AuthMe {
+                authMe {
+                  sub
+                  nickname
+                  name
+                  picture
+                  updated_at
+                }
+              }`,
+            },
           })
             .then(({ data: response }) => {
               preData.innerHTML = JSON.stringify(response?.data, null, ' ');
             })
             .catch((errors) => {
-              console.log({ errors });
+              pre.innerHTML = errors?.message || 'Unknown error';
             });
         }
       });
@@ -38,6 +51,7 @@
   </head>
   <body>
     <h1>Callback</h1>
+    <p><a href="/">Back Home</a></p>
     <code><pre id="code"></pre></code>
     <p>Validation</p>
     <code><pre id="data"></pre></code>

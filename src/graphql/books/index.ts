@@ -2,10 +2,12 @@
 // ========================================================
 import { BaseContext } from 'apollo-server-types';
 import { BOOK_QUERY, BOOK_CREATE, BOOK_UPDATE, BOOK_DELETE } from './queries';
+import { USER_QUERY } from '../users/queries';
 import { NotFound } from '../../utils/errorHandlers';
 
 // Types
 import { Book } from './types';
+import { User } from '../users/types';
 import { TArgs } from '../../utils/base';
 
 // Imports
@@ -105,17 +107,41 @@ const MutationDeleteBook = async (
   return data;
 };
 
+/**
+ *
+ * @param user
+ * @returns
+ */
+const BookUserId = (book: Book): string => {
+  return book.user_id;
+};
+
+/**
+ *
+ * @param user
+ * @returns
+ */
+const BookUser = async (book: Book): Promise<User> => {
+  const user: User = await USER_QUERY({ id: book.user_id }, true);
+  return user;
+};
+
 // Exports
 // ========================================================
 export default {
   queries: {
-    users: QueryListBooks,
-    user: QueryReadBook,
+    books: QueryListBooks,
+    book: QueryReadBook,
   },
   mutations: {
     createBook: MutationCreateBook,
     updateBook: MutationUpdateBook,
     deleteBook: MutationDeleteBook,
   },
-  models: {},
+  models: {
+    Book: {
+      user_id: BookUserId,
+      user: BookUser,
+    },
+  },
 };

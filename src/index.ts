@@ -4,12 +4,21 @@ import { config } from 'dotenv';
 import express from 'express';
 import cors from 'express';
 import helmet from 'helmet';
-import { ApolloServer, makeExecutableSchema } from 'apollo-server-express';
+import { ApolloServer, makeExecutableSchema, AuthenticationError } from 'apollo-server-express';
+import jwt from 'express-jwt';
+import jwks from 'jwks-rsa';
+import { applyMiddleware } from 'graphql-middleware';
+
+// Helpers
+import { parseJwt } from './utils/helpers';
 
 // GraphQL
 import resolvers from './graphql/resolvers';
 import typeDefs from './graphql/typeDefs';
 import { ContextProps } from './graphql/types';
+
+// Middlewares
+import { middlewareQueries } from './graphql/middlewares/auth';
 
 // ENV VARS
 // ========================================================
@@ -24,12 +33,25 @@ const context = ({ req, res }: ContextProps) => ({ req, res });
 
 // Init
 // ========================================================
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const middlewares: any = [middlewareQueries];
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+const schemaWithMiddleware = applyMiddleware(schema, ...middlewares);
+
 /**
  *
  */
 const graphQLServer = new ApolloServer({
-  schema: makeExecutableSchema({ typeDefs, resolvers }),
+  schema: schemaWithMiddleware,
   context,
+  engine: {
+    rewriteError(err) {
+      if (err instanceof AuthenticationError) {
+        return null;
+      }
+      return err;
+    },
+  },
 });
 
 /**
@@ -41,8 +63,35 @@ const app = express();
 // ========================================================
 app.use(cors());
 app.use(helmet());
+app.use((req, res, next) => {
+  if (req?.headers?.authorization) {
+    const token = req?.headers?.authorization.split(' ');
+    try {
+      if (token.length < 1 || (token.length > 1 && !parseJwt(token[1]))) {
+        return res.status(401).send('Invalid Token');
+      }
+    } catch {
+      return res.status(401).send('Invalid Token');
+    }
+  }
+  next();
+});
+app.use(
+  jwt({
+    secret: jwks.expressJwtSecret({
+      cache: true,
+      rateLimit: true,
+      jwksRequestsPerMinute: 5,
+      jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
+    }),
+    audience: `${process.env.AUTH0_AUDIENCE}`,
+    issuer: `https://${process.env.AUTH0_DOMAIN}/`,
+    algorithms: ['RS256'],
+    credentialsRequired: false,
+  }),
+);
 
-// Endpoints / Routess
+// Endpoints / Routes
 // ========================================================
 /*NOTE: Remove this and its folder as needed*/
 app.use('/', express.static('public'));
@@ -60,6 +109,8 @@ app.get('/api', (_req, res) =>
   }),
 );
 
+// GraphQL
+// ========================================================
 /**
  *
  */
@@ -68,7 +119,7 @@ graphQLServer.applyMiddleware({
   cors: false,
 });
 
-// Exprots
+// Exports
 // ========================================================
 export default app;
 export { graphQLServer };

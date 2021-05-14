@@ -18,6 +18,7 @@ export const typeDefsTypes = `
     user_id: String!
     created_at: String!
     updated_at: String!
+    user: User
   }
 `;
 

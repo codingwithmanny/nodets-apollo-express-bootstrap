@@ -4,30 +4,53 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/env.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.auth0.com/js/auth0/9.11/auth0.min.js"></script>
     <script>
       window.addEventListener('load', () => {
+        const accessToken = () => localStorage.getItem('accessToken');
         const buttonLogin = document.getElementById('login');
-        const buttonGraphql = document.getElementById('graphql');
+        const buttonDelete = document.getElementById('delete');
+        const buttonBooks = document.getElementById('books');
+        const buttonUsers = document.getElementById('users');
+        const buttonBooksUsers = document.getElementById('books-users');
         const pre = document.querySelector('pre');
+
         const webAuth = new auth0.WebAuth({
-          domain: '',
-          clientID: '',
-          redirectUri: 'http://localhost:5000/callback',
-          audience: '',
-          responseType: '',
-          scope: '',
+          domain: `${window.AUTH0_DOMAIN}`,
+          clientID: `${window.AUTH0_CLIENT_ID}`,
+          redirectUri: `${window.AUTH0_REDIRECT_URI}`,
+          audience: `${window.AUTH0_AUDIENCE}`,
+          responseType: `${window.AUTH0_RESPONSE_TYPE}`,
+          scope: `${window.AUTH0_SCOPE}`,
         });
 
+        // Events
+        /**
+         *
+         */
         buttonLogin.addEventListener('click', () => {
           webAuth.authorize();
         });
 
-        buttonGraphql.addEventListener('click', () => {
+        /**
+         *
+         */
+        buttonDelete.addEventListener('click', () => {
+          localStorage.removeItem('accessToken');
+        });
+
+        /**
+         *
+         */
+        buttonUsers.addEventListener('click', () => {
           axios({
             url: `${window.location.origin}/graphql`,
             method: 'POST',
+            headers: {
+              authorization: `Bearer ${accessToken()}`,
+            },
             data: {
               query: `query Users {
                 users {
@@ -40,10 +63,66 @@
             },
           })
             .then(({ data: response }) => {
-              pre.innerHTML = JSON.stringify(response?.data?.users, null, ' ');
+              pre.innerHTML = JSON.stringify(response?.data?.users || response?.errors, null, ' ');
             })
             .catch((errors) => {
-              console.log({ errors });
+              pre.innerHTML = errors?.message || 'Unknown error';
+            });
+        });
+
+        /**
+         *
+         */
+        buttonBooks.addEventListener('click', () => {
+          axios({
+            url: `${window.location.origin}/graphql`,
+            method: 'POST',
+            data: {
+              query: `query Books {
+                books {
+                  id
+                  name
+                }
+              }`,
+            },
+          })
+            .then(({ data: response }) => {
+              pre.innerHTML = JSON.stringify(response?.data?.books || response?.errors, null, ' ');
+            })
+            .catch((errors) => {
+              pre.innerHTML = errors?.message || 'Unknown error';
+            });
+        });
+
+        /**
+         *
+         */
+        buttonBooksUsers.addEventListener('click', () => {
+          axios({
+            url: `${window.location.origin}/graphql`,
+            method: 'POST',
+            headers: {
+              authorization: `Bearer ${accessToken()}`,
+            },
+            data: {
+              query: `query Books {
+                books {
+                  id
+                  name
+                  user {
+                    id
+                    first_name
+                    last_name
+                  }
+                }
+              }`,
+            },
+          })
+            .then(({ data: response }) => {
+              pre.innerHTML = JSON.stringify(response?.data?.books || response?.errors, null, ' ');
+            })
+            .catch((errors) => {
+              pre.innerHTML = errors?.message || 'Unknown error';
             });
         });
       });
@@ -53,7 +132,10 @@
   <body>
     <h1>NodeTS Apollo Express Bootstrap</h1>
     <button id="login">Login</button>
-    <button id="graphql">Get Users</button>
+    <button id="delete">Delete Token</button>
+    <button id="users">Get Users</button>
+    <button id="books">Get Books</button>
+    <button id="books-users">Books Users</button>
     <hr />
     <code><pre></pre></code>
   </body>
